@@ -1,0 +1,48 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "type": "object",
+  "description": "TEST",
+  "properties": {
+    "ce_parameters": {
+      "type": "object",
+      "description": "Object contains CE info o-50-8",
+      "properties": {
+        "ce_terminal_apply_cold_standby": {
+          "type": "boolean",
+          "description": "Cold standby necessity 15-1-4"
+        },
+        "ce_line_structure_type": {
+          "type": "string",
+          "description": "Dual line type 15-1-181",
+          "properties": {
+            "ce_line_struc_test": {
+              "type": "string",
+              "description": "Test case 12",
+              "enum": [
+                "one",
+                "two",
+                "three"
+              ],
+              "properties": {
+                "ce_test": {
+                  "type": "string",
+                  "description": "Test case 000",
+                  "enum": [
+                    "one",
+                    "two",
+                    "three"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "ce_terminal_install_address_country": {
+          "type": "string",
+          "description": "Country name 15-1-8",
+          "pattern": "^.*$"
+        }
+      }
+    }
+  }
+}
