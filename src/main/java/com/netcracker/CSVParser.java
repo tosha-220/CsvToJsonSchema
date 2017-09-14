@@ -32,7 +32,6 @@ class CSVParser {
                 result.put(record.get("name"), params);
             }
             new SchemaSeparator().findSchemaNames(result);
-//            new JsonSchemaGenerator().generate();
         } catch (IOException e) {
             e.printStackTrace();
         }

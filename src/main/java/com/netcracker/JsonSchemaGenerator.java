@@ -1,5 +1,8 @@
 package com.netcracker;
 
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonParser;
+
 import java.util.*;
 
 class JsonSchemaGenerator {
@@ -7,7 +10,6 @@ class JsonSchemaGenerator {
             .append("{\"$schema\": \"http://json-schema.org/draft-04/schema#\", \"type\": \"object\",");
     private Set<String> parentsNames = new HashSet<>();
     private Map<String, Map<String, Object>> allSchemaEntity;
-    private Map<String, String> required = new HashMap<>();
 
     void generate(Map<String, Map<String, Object>> allSchemaEntity, String schemaName) {
         Set<String> parentsNames = new HashSet<>();
@@ -24,20 +26,20 @@ class JsonSchemaGenerator {
         fullJ.append("\"properties\":{");
         for (String name : parentsNames) {
             fillJson(name);
-//            System.out.println(name);
             findChildAttributes(name);
         }
         bracketSeparator();
-        leadToFinalForm();
-        System.out.println(required);
+        setRequired(new ArrayList<>(parentsNames));
+        new OutputSchemaWriter().writeJsonSchema(schemaName,leadToFinalForm());
     }
 
-    private void leadToFinalForm() {
-        String s = fullJ.toString().replaceAll(",}", "}").replaceAll("},}", "}}");
-        if (s.endsWith(",")) {
-            s = s.substring(0, s.length() - 1).concat("}");  ////////
+    private String leadToFinalForm() {
+        String fullJ = this.fullJ.toString().replaceAll(",}", "}").replaceAll("},}", "}}").replaceAll(",]","]");
+        if (fullJ.endsWith(",")) {
+            fullJ = fullJ.substring(0, fullJ.length() - 1).concat("}");  ////////
         }
-        System.out.println(s);
+        System.out.println(fullJ);
+        return new GsonBuilder().setPrettyPrinting().create().toJson(new JsonParser().parse(fullJ));
     }
 
     private boolean setPropToParentAttributes(String name) {
@@ -46,9 +48,6 @@ class JsonSchemaGenerator {
             for (Map.Entry<String, Object> inner : entry.getValue().entrySet()) {
                 if (inner.getKey().equals("parent") && inner.getValue().equals(name)) {
                     parentsNames.add(name);
-                }
-                if (inner.getKey().equals("required") && (inner.getValue().equals("●") || inner.getValue().equals("★"))) {
-                    required.put(entry.getKey(), (String) inner.getValue());
                 }
             }
         }
@@ -69,7 +68,6 @@ class JsonSchemaGenerator {
     }
 
     private void findChildAttributes(String name) {
-
         List<String> childs = new ArrayList<>();
 
         for (Map.Entry<String, Map<String, Object>> entry : this.allSchemaEntity.entrySet()) {
@@ -79,8 +77,6 @@ class JsonSchemaGenerator {
                 }
             }
         }
-
-        System.out.println(childs);
         int beforeSize = childs.size();
         if (childs.size() != 0) {
             for (String child : childs) {
@@ -89,22 +85,31 @@ class JsonSchemaGenerator {
                 beforeSize--;
                 if (beforeSize == 0) {
                     bracketSeparator();
+                    setRequired(childs);
                     bracketSeparator();
                 }
             }
         }
     }
 
-
-    ///////
-    private boolean isRequired(String child) {
-        for (Map.Entry<String, String> entry : this.required.entrySet()) {
-            return entry.getKey().equals(child);
+    private void setRequired(List<String> childs) {
+        List<String> required = new ArrayList<>();
+        for (String name : childs) {
+            if (this.allSchemaEntity.get(name).get("required") != null) {
+                if (this.allSchemaEntity.get(name).get("required").equals("●") || this.allSchemaEntity.get(name).get("required").equals("★")) {
+                    required.add(name);
+                }
+            }
         }
-        return false;
+        if (required.size() != 0) {
+            fullJ.append("\"").append("required").append("\"").append(":").append("[");
+            for (String name : required) {
+                fullJ.append("\"").append(name).append("\"").append(",");
+            }
+            fullJ.append("],");
+        }
     }
 
-    ///////////
     private void fillJson(String name) {
         Map<String, Object> findingEntity = new HashMap<>();
         for (Map.Entry<String, Map<String, Object>> entry : this.allSchemaEntity.entrySet()) {
