@@ -1,23 +1,31 @@
 package com.netcracker;
 
-import java.io.BufferedWriter;
-import java.io.FileWriter;
-import java.io.IOException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.io.*;
 
 class OutputSchemaWriter {
+    private Logger logger = LoggerFactory.getLogger(OutputSchemaWriter.class);
+    private String schema = "schemes/";
+
     void writeJsonSchema(String schemaName, String fullJ) {
 
-        FileWriter fileWriter = null;
-        BufferedWriter bufferedWriter = null;
-        try {
-            fileWriter = new FileWriter(schemaName + ".txt");
-            bufferedWriter = new BufferedWriter(fileWriter);
+        File schemaFolder = new File(schema);
+        if (!schemaFolder.exists()) {
+            schemaFolder.mkdir();
+        }
+
+        try (BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(schemaFolder + "/" + schemaName + ".txt"))) {
+            logger.info("Starting writing file " + schemaName + ".txt");
             bufferedWriter.write(fullJ);
             bufferedWriter.flush();
-            fileWriter.close();
-            bufferedWriter.close();
+
+        } catch (FileNotFoundException e) {
+            logger.error("Path not found", e);
         } catch (IOException e) {
-            e.printStackTrace();
+            logger.error("Error while writing file", e);
         }
+        logger.info("Completed");
     }
 }

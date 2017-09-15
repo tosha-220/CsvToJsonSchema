@@ -2,10 +2,14 @@ package com.netcracker;
 
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonParser;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.*;
 
 class JsonSchemaGenerator {
+
+    private Logger logger = LoggerFactory.getLogger(JsonSchemaGenerator.class);
     private StringBuilder fullJ = new StringBuilder()
             .append("{\"$schema\": \"http://json-schema.org/draft-04/schema#\", \"type\": \"object\",");
     private Set<String> parentsNames = new HashSet<>();
@@ -19,6 +23,7 @@ class JsonSchemaGenerator {
             }
         }
         if (parentsNames.size() == 0) {
+            logger.error("CSV for schema " + schemaName + " doesn't have root attributes (without parent)");
             return;
         }
         this.allSchemaEntity = allSchemaEntity;
@@ -30,15 +35,14 @@ class JsonSchemaGenerator {
         }
         bracketSeparator();
         setRequired(new ArrayList<>(parentsNames));
-        new OutputSchemaWriter().writeJsonSchema(schemaName,leadToFinalForm());
+        new OutputSchemaWriter().writeJsonSchema(schemaName, leadToFinalForm());
     }
 
     private String leadToFinalForm() {
-        String fullJ = this.fullJ.toString().replaceAll(",}", "}").replaceAll("},}", "}}").replaceAll(",]","]");
+        String fullJ = this.fullJ.toString().replaceAll(",}", "}").replaceAll("},}", "}}").replaceAll(",]", "]");
         if (fullJ.endsWith(",")) {
             fullJ = fullJ.substring(0, fullJ.length() - 1).concat("}");  ////////
         }
-        System.out.println(fullJ);
         return new GsonBuilder().setPrettyPrinting().create().toJson(new JsonParser().parse(fullJ));
     }
 
